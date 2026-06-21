@@ -1,0 +1,309 @@
+{
+  "listName": "WorkflowTasks",
+  "description": "Individual tasks assigned to departments during lifecycle processes",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": false,
+  "columns": [
+    {
+      "internalName": "TaskID",
+      "displayName": "Task ID",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Auto-generated: TSK-YYYYMMDD-####"
+    },
+    {
+      "internalName": "LifecycleRequest",
+      "displayName": "Lifecycle Request",
+      "type": "Lookup",
+      "required": true,
+      "lookupList": "LifecycleRequests",
+      "lookupField": "RequestID",
+      "allowMultipleValues": false,
+      "indexed": true,
+      "additionalFields": ["LifecycleType", "Employee"]
+    },
+    {
+      "internalName": "TaskName",
+      "displayName": "Task Name",
+      "type": "Text",
+      "required": true,
+      "maxLength": 255,
+      "indexed": true
+    },
+    {
+      "internalName": "TaskDescription",
+      "displayName": "Task Description",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "Department",
+      "displayName": "Assigned Department",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Payroll",
+        "Operations",
+        "Facilities",
+        "Security",
+        "Compliance",
+        "Legal",
+        "Management"
+      ]
+    },
+    {
+      "internalName": "AssignedTo",
+      "displayName": "Assigned To",
+      "type": "User",
+      "required": true,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "AssignedToGroup",
+      "displayName": "Assigned To Group",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleAndGroups",
+      "description": "Security group for task assignment"
+    },
+    {
+      "internalName": "TaskStatus",
+      "displayName": "Task Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Not Started",
+        "In Progress",
+        "Waiting on Others",
+        "Blocked",
+        "Completed",
+        "Cancelled",
+        "Deferred"
+      ],
+      "defaultValue": "Not Started"
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Low",
+        "Normal",
+        "High",
+        "Critical"
+      ],
+      "defaultValue": "Normal"
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "Due Date",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateTime",
+      "indexed": true
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "Start Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "CompletedDate",
+      "displayName": "Completed Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "PercentComplete",
+      "displayName": "Percent Complete",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "decimals": 0,
+      "showAsPercentage": true,
+      "defaultValue": "0"
+    },
+    {
+      "internalName": "ActualEffort",
+      "displayName": "Actual Effort (Hours)",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 2
+    },
+    {
+      "internalName": "EstimatedEffort",
+      "displayName": "Estimated Effort (Hours)",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 2
+    },
+    {
+      "internalName": "TaskCategory",
+      "displayName": "Task Category",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Documentation",
+        "System Access",
+        "Equipment",
+        "Training",
+        "Approval",
+        "Data Entry",
+        "Verification",
+        "Communication",
+        "Compliance",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "IsMandatory",
+      "displayName": "Is Mandatory",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "Yes"
+    },
+    {
+      "internalName": "BlockingTask",
+      "displayName": "Blocking Task",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "WorkflowTasks",
+      "lookupField": "TaskName",
+      "allowMultipleValues": false,
+      "description": "Task that must be completed before this task can start"
+    },
+    {
+      "internalName": "CompletionNotes",
+      "displayName": "Completion Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 6
+    },
+    {
+      "internalName": "ReminderSent",
+      "displayName": "Reminder Sent",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No"
+    },
+    {
+      "internalName": "EscalationLevel",
+      "displayName": "Escalation Level",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "None",
+        "Level 1",
+        "Level 2",
+        "Level 3"
+      ],
+      "defaultValue": "None"
+    },
+    {
+      "internalName": "TaskAge",
+      "displayName": "Task Age (Days)",
+      "type": "Calculated",
+      "formula": "=IF([TaskStatus]=\"Completed\",[CompletedDate]-[Created],TODAY()-[Created])",
+      "returnType": "Number"
+    },
+    {
+      "internalName": "IsOverdue",
+      "displayName": "Is Overdue",
+      "type": "Calculated",
+      "formula": "=IF(AND([TaskStatus]<>\"Completed\",[DueDate]<TODAY()),\"Yes\",\"No\")",
+      "returnType": "Text"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "My Tasks",
+      "viewType": "Standard",
+      "query": "<Where><And><Eq><FieldRef Name='AssignedTo'/><Value Type='User'><UserID/></Value></Eq><Neq><FieldRef Name='TaskStatus'/><Value Type='Choice'>Completed</Value></Neq></And></Where>",
+      "columns": [
+        "TaskID",
+        "TaskName",
+        "LifecycleRequest",
+        "Priority",
+        "TaskStatus",
+        "DueDate",
+        "PercentComplete"
+      ]
+    },
+    {
+      "viewName": "Overdue Tasks",
+      "viewType": "Standard",
+      "query": "<Where><And><Neq><FieldRef Name='TaskStatus'/><Value Type='Choice'>Completed</Value></Neq><Lt><FieldRef Name='DueDate'/><Value Type='DateTime'><Today/></Value></Lt></And></Where>",
+      "columns": [
+        "TaskID",
+        "TaskName",
+        "Department",
+        "AssignedTo",
+        "DueDate",
+        "Priority",
+        "EscalationLevel"
+      ]
+    },
+    {
+      "viewName": "Department View - HR",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='Department'/><Value Type='Choice'>Human Resources</Value></Eq></Where>",
+      "columns": [
+        "TaskID",
+        "TaskName",
+        "AssignedTo",
+        "TaskStatus",
+        "DueDate",
+        "Priority"
+      ]
+    },
+    {
+      "viewName": "Department View - IT",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='Department'/><Value Type='Choice'>Information Technology</Value></Eq></Where>",
+      "columns": [
+        "TaskID",
+        "TaskName",
+        "AssignedTo",
+        "TaskStatus",
+        "DueDate",
+        "Priority"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "Department Users",
+        "permissions": ["View", "Edit Own"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,350 @@
+{
+  "flowName": "Offboarding Workflow",
+  "description": "Automated offboarding process for resignations and terminations",
+  "flowType": "Automated Cloud Flow",
+  "trigger": {
+    "type": "SharePoint",
+    "action": "When an item is created",
+    "configuration": {
+      "siteAddress": "<SharePoint Site URL>",
+      "listName": "LifecycleRequests",
+      "condition": "LifecycleType in ('Resignation', 'Termination', 'Retirement') and RequestStatus equals 'Approved'"
+    }
+  },
+  "steps": [
+    {
+      "stepNumber": 1,
+      "stepName": "Initialize Variables",
+      "action": "Initialize variable",
+      "variables": [
+        {
+          "name": "varEmployeeId",
+          "type": "Integer",
+          "value": "@{triggerBody()?['Employee']?['Id']}"
+        },
+        {
+          "name": "varLastWorkingDay",
+          "type": "String",
+          "value": "@{triggerBody()?['EffectiveDate']}"
+        },
+        {
+          "name": "varEquipmentList",
+          "type": "Array",
+          "value": []
+        },
+        {
+          "name": "varAccessList",
+          "type": "Array",
+          "value": []
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "stepName": "Get Employee Details",
+      "action": "SharePoint - Get item",
+      "configuration": {
+        "list": "Employees",
+        "id": "@{variables('varEmployeeId')}"
+      }
+    },
+    {
+      "stepNumber": 3,
+      "stepName": "Get Assigned Equipment",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "EquipmentRegister",
+        "filter": "AssignedToId eq @{variables('varEmployeeId')} and AssetStatus eq 'Assigned'"
+      }
+    },
+    {
+      "stepNumber": 4,
+      "stepName": "Get Active System Access",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "SystemAccess",
+        "filter": "EmployeeId eq @{variables('varEmployeeId')} and AccessStatus eq 'Active'"
+      }
+    },
+    {
+      "stepNumber": 5,
+      "stepName": "Create HR Offboarding Tasks",
+      "action": "Scope",
+      "configuration": {
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "LifecycleRequestId": "@{triggerBody()?['ID']}",
+              "TaskName": "Schedule Exit Interview",
+              "Department": "Human Resources",
+              "TaskStatus": "Not Started",
+              "Priority": "High",
+              "DueDate": "@{addDays(variables('varLastWorkingDay'), -5)}",
+              "IsMandatory": true
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Process Final Payroll",
+              "Department": "Human Resources",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{variables('varLastWorkingDay')}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Generate Experience Letter",
+              "Department": "Human Resources",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{addDays(variables('varLastWorkingDay'), 7)}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Update Employee Status to Terminated",
+              "Department": "Human Resources",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{addDays(variables('varLastWorkingDay'), 1)}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 6,
+      "stepName": "Create Equipment Return Tasks",
+      "action": "Apply to each",
+      "configuration": {
+        "input": "@body('Get_Assigned_Equipment')",
+        "actions": [
+          {
+            "action": "SharePoint - Update item",
+            "list": "EquipmentRegister",
+            "id": "@{item()?['ID']}",
+            "fields": {
+              "AssetStatus": "Pending Return",
+              "ExpectedReturnDate": "@{variables('varLastWorkingDay')}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "LifecycleRequestId": "@{triggerBody()?['ID']}",
+              "TaskName": "Collect Equipment: @{item()?['DeviceType']} (@{item()?['AssetTag']})",
+              "Department": "Facilities",
+              "TaskStatus": "Not Started",
+              "Priority": "@{if(item()?['IsHighValue'], 'High', 'Normal')}",
+              "DueDate": "@{variables('varLastWorkingDay')}",
+              "IsMandatory": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 7,
+      "stepName": "Create Access Deprovisioning Tasks",
+      "action": "Apply to each",
+      "configuration": {
+        "input": "@body('Get_Active_System_Access')",
+        "actions": [
+          {
+            "action": "SharePoint - Update item",
+            "list": "SystemAccess",
+            "id": "@{item()?['ID']}",
+            "fields": {
+              "AccessStatus": "Pending Deprovisioning"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "LifecycleRequestId": "@{triggerBody()?['ID']}",
+              "TaskName": "Revoke Access: @{item()?['SystemName']}",
+              "Department": "Information Technology",
+              "TaskStatus": "Not Started",
+              "Priority": "Critical",
+              "DueDate": "@{addHours(variables('varLastWorkingDay'), 18)}",
+              "TaskDescription": "Revoke @{item()?['AccessType']} access for @{body('Get_Employee_Details')?['Email']}",
+              "IsMandatory": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 8,
+      "stepName": "Create Payroll Termination Task",
+      "action": "SharePoint - Create item",
+      "configuration": {
+        "list": "WorkflowTasks",
+        "fields": {
+          "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+          "LifecycleRequestId": "@{triggerBody()?['ID']}",
+          "TaskName": "Process Final Payroll and Terminate",
+          "Department": "Payroll",
+          "TaskStatus": "Not Started",
+          "Priority": "Critical",
+          "DueDate": "@{addDays(variables('varLastWorkingDay'), 3)}",
+          "TaskDescription": "Process final salary, leave encashment, and terminate employee in payroll system",
+          "IsMandatory": true
+        }
+      }
+    },
+    {
+      "stepNumber": 9,
+      "stepName": "Create Facilities Tasks",
+      "action": "Scope",
+      "configuration": {
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Deactivate Building Access Card",
+              "Department": "Facilities",
+              "TaskStatus": "Not Started",
+              "Priority": "High",
+              "DueDate": "@{addHours(variables('varLastWorkingDay'), 18)}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Collect Parking Pass",
+              "Department": "Facilities",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{variables('varLastWorkingDay')}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 10,
+      "stepName": "Notify Manager",
+      "action": "Send an email (V2)",
+      "configuration": {
+        "to": "@{body('Get_Employee_Details')?['Manager']?['Email']}",
+        "subject": "Offboarding Process Initiated: @{body('Get_Employee_Details')?['Title']}",
+        "body": "<p>Dear Manager,</p><p>The offboarding process has been initiated for <strong>@{body('Get_Employee_Details')?['Title']}</strong>.</p><p><strong>Type:</strong> @{triggerBody()?['LifecycleType']}<br><strong>Last Working Day:</strong> @{formatDateTime(variables('varLastWorkingDay'), 'dd MMM yyyy')}</p><p><strong>Action Required:</strong></p><ul><li>Conduct knowledge transfer sessions</li><li>Reassign ongoing tasks</li><li>Participate in exit interview if requested</li><li>Ensure all company property is returned</li></ul><p><a href='<SharePoint URL>/LifecycleRequests/DispForm.aspx?ID=@{triggerBody()?['ID']}'>View Offboarding Request</a></p>",
+        "importance": "High"
+      }
+    },
+    {
+      "stepNumber": 11,
+      "stepName": "Notify IT Security Team",
+      "action": "Post message in a chat or channel",
+      "configuration": {
+        "team": "IT Operations",
+        "channel": "Security Alerts",
+        "message": "<strong>URGENT - Access Revocation Required</strong><br>Employee: @{body('Get_Employee_Details')?['Title']}<br>Last Working Day: @{formatDateTime(variables('varLastWorkingDay'), 'dd MMM yyyy')}<br>Active Systems: @{length(body('Get_Active_System_Access'))}<br>Request ID: @{triggerBody()?['RequestID']}"
+      }
+    },
+    {
+      "stepNumber": 12,
+      "stepName": "Create Compliance Alert If High Value Equipment",
+      "action": "Condition",
+      "configuration": {
+        "expression": "@greater(length(body('Get_Assigned_Equipment')), 0)",
+        "ifTrue": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "ComplianceAlerts",
+            "fields": {
+              "AlertID": "@{concat('ALT-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "AlertType": "Unreturned Equipment",
+              "AlertCategory": "Offboarding",
+              "Severity": "High",
+              "AlertStatus": "New",
+              "EmployeeId": "@{variables('varEmployeeId')}",
+              "LifecycleRequestId": "@{triggerBody()?['ID']}",
+              "AlertDescription": "Employee has @{length(body('Get_Assigned_Equipment'))} equipment items to return by @{formatDateTime(variables('varLastWorkingDay'), 'dd MMM yyyy')}",
+              "RecommendedAction": "Track equipment return and follow up if not returned by due date",
+              "AssignedToDepartment": "Facilities",
+              "DueDate": "@{variables('varLastWorkingDay')}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 13,
+      "stepName": "Update Lifecycle Request",
+      "action": "SharePoint - Update item",
+      "configuration": {
+        "list": "LifecycleRequests",
+        "id": "@{triggerBody()?['ID']}",
+        "fields": {
+          "CurrentStage": "In Progress",
+          "TotalTasks": "@{add(add(4, length(body('Get_Assigned_Equipment'))), length(body('Get_Active_System_Access')))}",
+          "CompletedTasks": 0
+        }
+      }
+    },
+    {
+      "stepNumber": 14,
+      "stepName": "Create Audit Log",
+      "action": "SharePoint - Create item",
+      "configuration": {
+        "list": "AuditTrail",
+        "fields": {
+          "AuditID": "@{concat('AUD-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 999999), 6, '0'))}",
+          "Timestamp": "@{utcNow()}",
+          "Action": "Created",
+          "EntityType": "Lifecycle Request",
+          "EntityID": "@{triggerBody()?['RequestID']}",
+          "EntityName": "Offboarding - @{body('Get_Employee_Details')?['Title']}",
+          "ActionDescription": "Offboarding process initiated. Type: @{triggerBody()?['LifecycleType']}, Last Working Day: @{formatDateTime(variables('varLastWorkingDay'), 'dd MMM yyyy')}",
+          "Department": "Human Resources",
+          "IsAutomated": true,
+          "FlowName": "Offboarding Workflow",
+          "IsSuccessful": true,
+          "Severity": "High"
+        }
+      }
+    }
+  ],
+  "errorHandling": {
+    "configureRunAfter": {
+      "onFailure": [
+        {
+          "action": "Send an email (V2)",
+          "to": "<HR Admin Email>, <IT Security Email>",
+          "subject": "URGENT: Offboarding Workflow Failed",
+          "body": "Critical error in offboarding workflow for employee @{body('Get_Employee_Details')?['Title']}. Manual intervention required immediately."
+        }
+      ]
+    }
+  },
+  "settings": {
+    "concurrency": {
+      "enabled": true,
+      "runs": 10
+    },
+    "retryPolicy": {
+      "type": "exponential",
+      "count": 3,
+      "interval": "PT2M"
+    }
+  },
+  "connections": [
+    "SharePoint",
+    "Office 365 Outlook",
+    "Microsoft Teams"
+  ]
+}

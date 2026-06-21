@@ -1,0 +1,331 @@
+{
+  "listName": "LifecycleRequests",
+  "description": "Central repository for all employee lifecycle requests",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": true,
+  "columns": [
+    {
+      "internalName": "RequestID",
+      "displayName": "Request ID",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Unique identifier for lifecycle request (Auto-generated: LCR-YYYYMMDD-####)"
+    },
+    {
+      "internalName": "LifecycleType",
+      "displayName": "Lifecycle Type",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Pre-Onboarding",
+        "Onboarding",
+        "Internal Transfer",
+        "Role Change",
+        "Department Transfer",
+        "Location Change",
+        "Resignation",
+        "Termination",
+        "Retirement",
+        "Leave of Absence"
+      ]
+    },
+    {
+      "internalName": "Employee",
+      "displayName": "Employee",
+      "type": "Lookup",
+      "required": true,
+      "lookupList": "Employees",
+      "lookupField": "Title",
+      "allowMultipleValues": false,
+      "indexed": true,
+      "additionalFields": ["EmployeeNumber", "Email", "Department"]
+    },
+    {
+      "internalName": "RequestDate",
+      "displayName": "Request Date",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateTime",
+      "indexed": true,
+      "defaultValue": "[Today]"
+    },
+    {
+      "internalName": "RequestedBy",
+      "displayName": "Requested By",
+      "type": "User",
+      "required": true,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "EffectiveDate",
+      "displayName": "Effective Date",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateOnly",
+      "indexed": true,
+      "description": "Date when the lifecycle change becomes effective"
+    },
+    {
+      "internalName": "RequestStatus",
+      "displayName": "Request Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Draft",
+        "Submitted",
+        "Pending Approval",
+        "Approved",
+        "In Progress",
+        "Partially Complete",
+        "Completed",
+        "Cancelled",
+        "Rejected",
+        "On Hold"
+      ],
+      "defaultValue": "Draft"
+    },
+    {
+      "internalName": "CurrentStage",
+      "displayName": "Current Stage",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "Initial Request",
+        "HR Processing",
+        "IT Provisioning",
+        "Payroll Setup",
+        "Facilities Setup",
+        "Manager Approval",
+        "Security Review",
+        "Compliance Check",
+        "Final Review",
+        "Completed"
+      ]
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Low",
+        "Normal",
+        "High",
+        "Critical"
+      ],
+      "defaultValue": "Normal"
+    },
+    {
+      "internalName": "DepartmentFrom",
+      "displayName": "From Department",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Operations",
+        "Sales",
+        "Marketing",
+        "Legal",
+        "Compliance",
+        "Customer Service",
+        "Research & Development",
+        "Facilities",
+        "Executive"
+      ]
+    },
+    {
+      "internalName": "DepartmentTo",
+      "displayName": "To Department",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Operations",
+        "Sales",
+        "Marketing",
+        "Legal",
+        "Compliance",
+        "Customer Service",
+        "Research & Development",
+        "Facilities",
+        "Executive"
+      ]
+    },
+    {
+      "internalName": "ManagerFrom",
+      "displayName": "From Manager",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false
+    },
+    {
+      "internalName": "ManagerTo",
+      "displayName": "To Manager",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false
+    },
+    {
+      "internalName": "LocationFrom",
+      "displayName": "From Location",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100
+    },
+    {
+      "internalName": "LocationTo",
+      "displayName": "To Location",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100
+    },
+    {
+      "internalName": "ReasonForChange",
+      "displayName": "Reason for Change",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "SLADueDate",
+      "displayName": "SLA Due Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime",
+      "indexed": true,
+      "description": "Calculated based on lifecycle type and priority"
+    },
+    {
+      "internalName": "CompletionDate",
+      "displayName": "Completion Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "TotalTasks",
+      "displayName": "Total Tasks",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 0
+    },
+    {
+      "internalName": "CompletedTasks",
+      "displayName": "Completed Tasks",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 0
+    },
+    {
+      "internalName": "PercentComplete",
+      "displayName": "Percent Complete",
+      "type": "Calculated",
+      "formula": "=IF([TotalTasks]>0,ROUND([CompletedTasks]/[TotalTasks]*100,0),0)",
+      "returnType": "Number",
+      "showAsPercentage": true
+    },
+    {
+      "internalName": "OnboardingChecklist",
+      "displayName": "Onboarding Checklist",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 10
+    },
+    {
+      "internalName": "OffboardingChecklist",
+      "displayName": "Offboarding Checklist",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 10
+    },
+    {
+      "internalName": "ApprovalComments",
+      "displayName": "Approval Comments",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 6
+    },
+    {
+      "internalName": "SLAStatus",
+      "displayName": "SLA Status",
+      "type": "Calculated",
+      "formula": "=IF([RequestStatus]=\"Completed\",\"Completed\",IF([SLADueDate]<TODAY(),\"Overdue\",IF([SLADueDate]<TODAY()+2,\"At Risk\",\"On Track\")))",
+      "returnType": "Text"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Active Requests",
+      "viewType": "Standard",
+      "query": "<Where><In><FieldRef Name='RequestStatus'/><Values><Value Type='Choice'>Submitted</Value><Value Type='Choice'>In Progress</Value><Value Type='Choice'>Pending Approval</Value></Values></In></Where>",
+      "columns": [
+        "RequestID",
+        "LifecycleType",
+        "Employee",
+        "RequestStatus",
+        "CurrentStage",
+        "PercentComplete",
+        "SLADueDate",
+        "SLAStatus"
+      ]
+    },
+    {
+      "viewName": "Overdue Requests",
+      "viewType": "Standard",
+      "query": "<Where><And><Neq><FieldRef Name='RequestStatus'/><Value Type='Choice'>Completed</Value></Neq><Lt><FieldRef Name='SLADueDate'/><Value Type='DateTime'><Today/></Value></Lt></And></Where>",
+      "columns": [
+        "RequestID",
+        "LifecycleType",
+        "Employee",
+        "Priority",
+        "SLADueDate",
+        "CurrentStage"
+      ]
+    },
+    {
+      "viewName": "My Requests",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='RequestedBy'/><Value Type='User'><UserID/></Value></Eq></Where>",
+      "columns": [
+        "RequestID",
+        "LifecycleType",
+        "Employee",
+        "RequestStatus",
+        "RequestDate",
+        "PercentComplete"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "Manager Access",
+        "permissions": ["View", "Add"]
+      }
+    ]
+  }
+}

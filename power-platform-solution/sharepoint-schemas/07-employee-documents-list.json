@@ -1,0 +1,274 @@
+{
+  "listName": "EmployeeDocuments",
+  "description": "Repository for employee documentation and compliance documents",
+  "listTemplate": "Document Library",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": false,
+  "majorVersionLimit": 10,
+  "columns": [
+    {
+      "internalName": "Employee",
+      "displayName": "Employee",
+      "type": "Lookup",
+      "required": true,
+      "lookupList": "Employees",
+      "lookupField": "Title",
+      "allowMultipleValues": false,
+      "indexed": true,
+      "additionalFields": ["EmployeeNumber", "Department"]
+    },
+    {
+      "internalName": "DocumentType",
+      "displayName": "Document Type",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Employment Contract",
+        "Offer Letter",
+        "NDA - Non-Disclosure Agreement",
+        "Background Check",
+        "Identity Verification",
+        "Tax Forms",
+        "Benefits Enrollment",
+        "Emergency Contact Form",
+        "Policy Acknowledgement",
+        "Training Certificate",
+        "Performance Review",
+        "Promotion Letter",
+        "Transfer Letter",
+        "Warning Letter",
+        "Resignation Letter",
+        "Termination Letter",
+        "Exit Interview",
+        "Reference Letter",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "DocumentCategory",
+      "displayName": "Document Category",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Pre-Employment",
+        "Onboarding",
+        "Employment",
+        "Compliance",
+        "Performance",
+        "Compensation & Benefits",
+        "Offboarding",
+        "Legal"
+      ]
+    },
+    {
+      "internalName": "DocumentStatus",
+      "displayName": "Document Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Draft",
+        "Pending Review",
+        "Pending Signature",
+        "Active",
+        "Expired",
+        "Archived"
+      ],
+      "defaultValue": "Draft"
+    },
+    {
+      "internalName": "IssueDate",
+      "displayName": "Issue Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "ExpiryDate",
+      "displayName": "Expiry Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true,
+      "description": "For documents with expiration (certifications, contracts)"
+    },
+    {
+      "internalName": "RequiresSignature",
+      "displayName": "Requires Signature",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No"
+    },
+    {
+      "internalName": "SignedDate",
+      "displayName": "Signed Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "SignedBy",
+      "displayName": "Signed By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "Version",
+      "displayName": "Document Version",
+      "type": "Text",
+      "required": false,
+      "maxLength": 20,
+      "description": "e.g., 1.0, 2.0, 2024-v1"
+    },
+    {
+      "internalName": "IsConfidential",
+      "displayName": "Is Confidential",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "Yes"
+    },
+    {
+      "internalName": "ComplianceRequired",
+      "displayName": "Compliance Required",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No",
+      "description": "Required for compliance/audit purposes"
+    },
+    {
+      "internalName": "RetentionPeriod",
+      "displayName": "Retention Period (Years)",
+      "type": "Number",
+      "required": false,
+      "min": 1,
+      "max": 99,
+      "decimals": 0,
+      "description": "Legal retention period"
+    },
+    {
+      "internalName": "ReviewedBy",
+      "displayName": "Reviewed By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "ReviewDate",
+      "displayName": "Review Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "UploadedBy",
+      "displayName": "Uploaded By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "DaysUntilExpiry",
+      "displayName": "Days Until Expiry",
+      "type": "Calculated",
+      "formula": "=IF([ExpiryDate],[ExpiryDate]-TODAY(),\"\")",
+      "returnType": "Number"
+    },
+    {
+      "internalName": "IsExpired",
+      "displayName": "Is Expired",
+      "type": "Calculated",
+      "formula": "=IF(AND([ExpiryDate],[ExpiryDate]<TODAY()),\"Yes\",\"No\")",
+      "returnType": "Text"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "All Active Documents",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='DocumentStatus'/><Value Type='Choice'>Active</Value></Eq></Where>",
+      "columns": [
+        "Name",
+        "Employee",
+        "DocumentType",
+        "DocumentCategory",
+        "IssueDate",
+        "ExpiryDate"
+      ]
+    },
+    {
+      "viewName": "Expiring Soon",
+      "viewType": "Standard",
+      "query": "<Where><And><IsNotNull><FieldRef Name='ExpiryDate'/></IsNotNull><And><Gt><FieldRef Name='ExpiryDate'/><Value Type='DateTime'><Today/></Value></Gt><Lt><FieldRef Name='ExpiryDate'/><Value Type='DateTime'><Today OffsetDays='90'/></Value></Lt></And></And></Where>",
+      "columns": [
+        "Name",
+        "Employee",
+        "DocumentType",
+        "ExpiryDate",
+        "DaysUntilExpiry"
+      ]
+    },
+    {
+      "viewName": "Pending Signature",
+      "viewType": "Standard",
+      "query": "<Where><And><Eq><FieldRef Name='RequiresSignature'/><Value Type='Boolean'>1</Value></Eq><Eq><FieldRef Name='DocumentStatus'/><Value Type='Choice'>Pending Signature</Value></Eq></And></Where>",
+      "columns": [
+        "Name",
+        "Employee",
+        "DocumentType",
+        "Created"
+      ]
+    },
+    {
+      "viewName": "Compliance Documents",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='ComplianceRequired'/><Value Type='Boolean'>1</Value></Eq></Where>",
+      "columns": [
+        "Name",
+        "Employee",
+        "DocumentType",
+        "DocumentStatus",
+        "ExpiryDate"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "Compliance View",
+        "permissions": ["View"]
+      },
+      {
+        "roleName": "Employee View Own",
+        "permissions": ["View Own"]
+      }
+    ]
+  },
+  "informationRightsManagement": {
+    "enabled": true,
+    "settings": {
+      "allowPrint": false,
+      "allowScript": false,
+      "documentAccessExpireDays": 180,
+      "enableDocumentBrowserPublishingView": false
+    }
+  }
+}

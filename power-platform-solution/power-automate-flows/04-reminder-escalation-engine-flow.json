@@ -1,0 +1,267 @@
+{
+  "flowName": "Reminder and Escalation Engine",
+  "description": "Automated reminders for overdue tasks and escalations",
+  "flowType": "Scheduled Cloud Flow",
+  "trigger": {
+    "type": "Recurrence",
+    "configuration": {
+      "frequency": "Hour",
+      "interval": 4,
+      "timeZone": "Eastern Standard Time",
+      "startTime": "2025-01-01T08:00:00Z"
+    }
+  },
+  "steps": [
+    {
+      "stepNumber": 1,
+      "stepName": "Initialize Variables",
+      "action": "Initialize variable",
+      "variables": [
+        {
+          "name": "varCurrentTime",
+          "type": "String",
+          "value": "@{utcNow()}"
+        },
+        {
+          "name": "varReminderCount",
+          "type": "Integer",
+          "value": 0
+        },
+        {
+          "name": "varEscalationCount",
+          "type": "Integer",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "stepName": "Get Overdue Tasks",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "WorkflowTasks",
+        "filter": "TaskStatus ne 'Completed' and DueDate lt '@{variables('varCurrentTime')}' and ReminderSent eq false",
+        "top": 100
+      }
+    },
+    {
+      "stepNumber": 3,
+      "stepName": "Process Overdue Tasks",
+      "action": "Apply to each",
+      "configuration": {
+        "input": "@body('Get_Overdue_Tasks')",
+        "actions": [
+          {
+            "action": "Get item",
+            "list": "LifecycleRequests",
+            "id": "@{item()?['LifecycleRequest']?['Id']}",
+            "outputAs": "lifecycleRequest"
+          },
+          {
+            "action": "Calculate Task Age",
+            "inputs": {
+              "taskAge": "@{div(sub(ticks(utcNow()), ticks(item()?['DueDate'])), 864000000000)}"
+            },
+            "outputAs": "taskAgeInDays"
+          },
+          {
+            "action": "Condition - Check If Escalation Needed",
+            "expression": "@greaterOrEquals(outputs('Calculate_Task_Age'), 2)",
+            "ifTrue": [
+              {
+                "action": "Get Manager of Assignee",
+                "userPrincipalName": "@{item()?['AssignedTo']?['Email']}",
+                "outputAs": "assigneeProfile"
+              },
+              {
+                "action": "Send Escalation Email",
+                "to": "@{body('Get_assignee_profile')?['manager']}",
+                "cc": "<Department Head Email>",
+                "subject": "⚠️ ESCALATION: Overdue Task - @{item()?['TaskName']}",
+                "body": "<p><strong>ESCALATION NOTICE</strong></p><p>The following task is overdue by @{outputs('Calculate_Task_Age')} days:</p><table style='border:1px solid #ccc;'><tr><td><strong>Task:</strong></td><td>@{item()?['TaskName']}</td></tr><tr><td><strong>Assigned To:</strong></td><td>@{item()?['AssignedTo']?['DisplayName']}</td></tr><tr><td><strong>Department:</strong></td><td>@{item()?['Department']}</td></tr><tr><td><strong>Due Date:</strong></td><td>@{formatDateTime(item()?['DueDate'], 'dd MMM yyyy')}</td></tr><tr><td><strong>Priority:</strong></td><td>@{item()?['Priority']}</td></tr><tr><td><strong>Request ID:</strong></td><td>@{body('Get_lifecycle_request')?['RequestID']}</td></tr></table><p><a href='<SharePoint URL>/WorkflowTasks/DispForm.aspx?ID=@{item()?['ID']}'>View Task</a></p>",
+                "importance": "High"
+              },
+              {
+                "action": "Update Task - Set Escalation",
+                "list": "WorkflowTasks",
+                "id": "@{item()?['ID']}",
+                "fields": {
+                  "EscalationLevel": "@{if(greaterOrEquals(outputs('Calculate_Task_Age'), 5), 'Level 3', if(greaterOrEquals(outputs('Calculate_Task_Age'), 3), 'Level 2', 'Level 1'))}",
+                  "ReminderSent": true
+                }
+              },
+              {
+                "action": "Create Compliance Alert",
+                "list": "ComplianceAlerts",
+                "fields": {
+                  "AlertID": "@{concat('ALT-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+                  "AlertType": "Overdue Task",
+                  "Severity": "@{if(greaterOrEquals(outputs('Calculate_Task_Age'), 5), 'Critical', 'High')}",
+                  "AlertStatus": "New",
+                  "WorkflowTaskId": "@{item()?['ID']}",
+                  "LifecycleRequestId": "@{body('Get_lifecycle_request')?['ID']}",
+                  "AlertDescription": "Task '@{item()?['TaskName']}' is overdue by @{outputs('Calculate_Task_Age')} days",
+                  "AssignedToDepartment": "@{item()?['Department']}",
+                  "AssignedTo": "@{item()?['AssignedTo']?['Email']}",
+                  "DueDate": "@{utcNow()}",
+                  "EscalationLevel": "@{if(greaterOrEquals(outputs('Calculate_Task_Age'), 5), 'Level 3 - Executive', 'Level 2')}"
+                }
+              },
+              {
+                "action": "Increment Escalation Counter",
+                "name": "varEscalationCount",
+                "value": 1
+              }
+            ],
+            "ifFalse": [
+              {
+                "action": "Send Reminder Email",
+                "to": "@{item()?['AssignedTo']?['Email']}",
+                "subject": "Reminder: Overdue Task - @{item()?['TaskName']}",
+                "body": "<p>This is a reminder that the following task is overdue:</p><p><strong>Task:</strong> @{item()?['TaskName']}<br><strong>Due Date:</strong> @{formatDateTime(item()?['DueDate'], 'dd MMM yyyy')}<br><strong>Priority:</strong> @{item()?['Priority']}</p><p>Please complete this task as soon as possible.</p><p><a href='<SharePoint URL>/WorkflowTasks/DispForm.aspx?ID=@{item()?['ID']}'>View Task</a></p>",
+                "importance": "Normal"
+              },
+              {
+                "action": "Update Task - Mark Reminder Sent",
+                "list": "WorkflowTasks",
+                "id": "@{item()?['ID']}",
+                "fields": {
+                  "ReminderSent": true
+                }
+              },
+              {
+                "action": "Increment Reminder Counter",
+                "name": "varReminderCount",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 4,
+      "stepName": "Get Overdue Lifecycle Requests",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "LifecycleRequests",
+        "filter": "RequestStatus ne 'Completed' and RequestStatus ne 'Cancelled' and SLADueDate lt '@{variables('varCurrentTime')}'",
+        "top": 50
+      }
+    },
+    {
+      "stepNumber": 5,
+      "stepName": "Process Overdue Requests",
+      "action": "Apply to each",
+      "configuration": {
+        "input": "@body('Get_Overdue_Lifecycle_Requests')",
+        "actions": [
+          {
+            "action": "Send an email (V2)",
+            "to": "<HR Manager Email>",
+            "cc": "@{item()?['RequestedBy']?['Email']}",
+            "subject": "⚠️ SLA Breach: @{item()?['RequestID']} - @{item()?['LifecycleType']}",
+            "body": "<p><strong>SLA BREACH ALERT</strong></p><p>The following lifecycle request has exceeded its SLA:</p><p><strong>Request ID:</strong> @{item()?['RequestID']}<br><strong>Type:</strong> @{item()?['LifecycleType']}<br><strong>Employee:</strong> @{item()?['Employee']?['Title']}<br><strong>Current Stage:</strong> @{item()?['CurrentStage']}<br><strong>SLA Due Date:</strong> @{formatDateTime(item()?['SLADueDate'], 'dd MMM yyyy HH:mm')}<br><strong>Completion:</strong> @{item()?['PercentComplete']}%</p><p><a href='<SharePoint URL>/LifecycleRequests/DispForm.aspx?ID=@{item()?['ID']}'>View Request</a></p>",
+            "importance": "High"
+          },
+          {
+            "action": "Create Compliance Alert",
+            "list": "ComplianceAlerts",
+            "fields": {
+              "AlertID": "@{concat('ALT-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "AlertType": "SLA Breach",
+              "Severity": "Critical",
+              "AlertStatus": "New",
+              "LifecycleRequestId": "@{item()?['ID']}",
+              "AlertDescription": "Lifecycle request @{item()?['RequestID']} has breached SLA",
+              "AssignedToDepartment": "Human Resources",
+              "ComplianceImpact": "High",
+              "RiskScore": 85
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 6,
+      "stepName": "Check Equipment Return Due",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "EquipmentRegister",
+        "filter": "AssetStatus eq 'Pending Return' and ExpectedReturnDate lt '@{variables('varCurrentTime')}' and ActualReturnDate eq null"
+      }
+    },
+    {
+      "stepNumber": 7,
+      "stepName": "Alert For Unreturned Equipment",
+      "action": "Apply to each",
+      "configuration": {
+        "input": "@body('Check_Equipment_Return_Due')",
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "ComplianceAlerts",
+            "fields": {
+              "AlertID": "@{concat('ALT-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "AlertType": "Unreturned Equipment",
+              "Severity": "@{if(item()?['IsHighValue'], 'Critical', 'High')}",
+              "AlertStatus": "New",
+              "EmployeeId": "@{item()?['AssignedTo']?['Id']}",
+              "AlertDescription": "Equipment not returned: @{item()?['DeviceType']} (@{item()?['AssetTag']}). Expected return: @{formatDateTime(item()?['ExpectedReturnDate'], 'dd MMM yyyy')}",
+              "AssignedToDepartment": "Facilities",
+              "ComplianceImpact": "@{if(item()?['IsHighValue'], 'High', 'Medium')}"
+            }
+          },
+          {
+            "action": "Send an email (V2)",
+            "to": "<Facilities Manager Email>",
+            "subject": "Equipment Not Returned: @{item()?['AssetTag']}",
+            "body": "Equipment has not been returned as expected. Please follow up immediately."
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 8,
+      "stepName": "Send Summary to HR",
+      "action": "Condition",
+      "configuration": {
+        "expression": "@or(greater(variables('varReminderCount'), 0), greater(variables('varEscalationCount'), 0))",
+        "ifTrue": [
+          {
+            "action": "Send an email (V2)",
+            "to": "<HR Operations Email>",
+            "subject": "Reminder Engine Summary - @{formatDateTime(utcNow(), 'dd MMM yyyy HH:mm')}",
+            "body": "<h3>Reminder and Escalation Summary</h3><p><strong>Reminders Sent:</strong> @{variables('varReminderCount')}<br><strong>Escalations:</strong> @{variables('varEscalationCount')}</p><p>Review the compliance alerts dashboard for details.</p>"
+          }
+        ]
+      }
+    }
+  ],
+  "errorHandling": {
+    "scope": "Entire Flow",
+    "onFailure": [
+      {
+        "action": "Send an email (V2)",
+        "to": "<System Admin Email>",
+        "subject": "Reminder Engine Flow Failed",
+        "body": "The reminder and escalation engine failed to run. Please investigate."
+      }
+    ]
+  },
+  "settings": {
+    "concurrency": {
+      "enabled": false
+    },
+    "retryPolicy": {
+      "type": "fixed",
+      "count": 2,
+      "interval": "PT10M"
+    }
+  },
+  "connections": [
+    "SharePoint",
+    "Office 365 Outlook",
+    "Office 365 Users"
+  ]
+}

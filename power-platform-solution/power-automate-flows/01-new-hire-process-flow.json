@@ -1,0 +1,342 @@
+{
+  "flowName": "New Hire Process - Pre-Onboarding",
+  "description": "Triggered when HR creates a new employee record in pre-onboarding status",
+  "flowType": "Automated Cloud Flow",
+  "trigger": {
+    "type": "SharePoint",
+    "action": "When an item is created",
+    "configuration": {
+      "siteAddress": "<SharePoint Site URL>",
+      "listName": "Employees",
+      "condition": "EmployeeStatus equals 'Pre-Onboarding'"
+    }
+  },
+  "steps": [
+    {
+      "stepNumber": 1,
+      "stepName": "Initialize Variables",
+      "action": "Initialize variable",
+      "variables": [
+        {
+          "name": "varRequestID",
+          "type": "String",
+          "value": "@{concat('LCR-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}"
+        },
+        {
+          "name": "varSLADueDate",
+          "type": "String",
+          "value": "@{addDays(triggerBody()?['StartDate'], -5)}"
+        },
+        {
+          "name": "varEmployeeName",
+          "type": "String",
+          "value": "@{concat(triggerBody()?['FirstName'], ' ', triggerBody()?['LastName'])}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "stepName": "Create Lifecycle Request",
+      "action": "SharePoint - Create item",
+      "configuration": {
+        "list": "LifecycleRequests",
+        "fields": {
+          "RequestID": "@{variables('varRequestID')}",
+          "LifecycleType": "Onboarding",
+          "EmployeeId": "@{triggerBody()?['ID']}",
+          "RequestDate": "@{utcNow()}",
+          "RequestedBy": "@{triggerBody()?['Author']?['Email']}",
+          "EffectiveDate": "@{triggerBody()?['StartDate']}",
+          "RequestStatus": "Submitted",
+          "CurrentStage": "Initial Request",
+          "Priority": "Normal",
+          "DepartmentTo": "@{triggerBody()?['Department']}",
+          "SLADueDate": "@{variables('varSLADueDate')}"
+        }
+      },
+      "outputs": {
+        "varLifecycleRequestId": "@{outputs('Create_Lifecycle_Request')?['body/ID']}"
+      }
+    },
+    {
+      "stepNumber": 3,
+      "stepName": "Get Onboarding Task Template",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "WorkflowTaskTemplates",
+        "filter": "LifecycleType eq 'Onboarding' and Department eq '@{triggerBody()?['Department']}'"
+      },
+      "note": "Optional: If you maintain task templates, otherwise use hardcoded task list"
+    },
+    {
+      "stepNumber": 4,
+      "stepName": "Create HR Tasks",
+      "action": "Apply to each",
+      "configuration": {
+        "input": "@{body('Get_Onboarding_Task_Template')}",
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "LifecycleRequestId": "@{variables('varLifecycleRequestId')}",
+              "TaskName": "Create Employment Contract",
+              "TaskDescription": "Prepare and finalize employment contract for @{variables('varEmployeeName')}",
+              "Department": "Human Resources",
+              "AssignedTo": "<HR Coordinator Email>",
+              "TaskStatus": "Not Started",
+              "Priority": "High",
+              "DueDate": "@{addDays(triggerBody()?['StartDate'], -3)}",
+              "TaskCategory": "Documentation",
+              "IsMandatory": true
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "LifecycleRequestId": "@{variables('varLifecycleRequestId')}",
+              "TaskName": "Prepare Welcome Pack",
+              "Department": "Human Resources",
+              "TaskStatus": "Not Started",
+              "Priority": "Normal",
+              "DueDate": "@{addDays(triggerBody()?['StartDate'], -1)}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskID": "@{concat('TSK-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 9999), 4, '0'))}",
+              "LifecycleRequestId": "@{variables('varLifecycleRequestId')}",
+              "TaskName": "Send Policy Documents for Acknowledgement",
+              "Department": "Human Resources",
+              "TaskStatus": "Not Started",
+              "Priority": "High",
+              "DueDate": "@{addDays(triggerBody()?['StartDate'], -2)}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 5,
+      "stepName": "Create IT Tasks",
+      "action": "Scope",
+      "configuration": {
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Allocate Laptop",
+              "Department": "Information Technology",
+              "AssignedTo": "<IT Service Desk Email>",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{addDays(triggerBody()?['StartDate'], -2)}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Create Email Account",
+              "Department": "Information Technology",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{triggerBody()?['StartDate']}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Provision Microsoft Teams Access",
+              "Department": "Information Technology",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{triggerBody()?['StartDate']}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Create VPN Access",
+              "Department": "Information Technology",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{triggerBody()?['StartDate']}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 6,
+      "stepName": "Create Payroll Tasks",
+      "action": "Scope",
+      "configuration": {
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Setup Employee in Payroll System",
+              "Department": "Payroll",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{addDays(triggerBody()?['StartDate'], -1)}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Configure Tax Setup",
+              "Department": "Payroll",
+              "TaskStatus": "Not Started"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Setup Benefits Enrollment",
+              "Department": "Payroll",
+              "TaskStatus": "Not Started"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 7,
+      "stepName": "Create Facilities Tasks",
+      "action": "Scope",
+      "configuration": {
+        "actions": [
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Setup Building Access Card",
+              "Department": "Facilities",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{triggerBody()?['StartDate']}"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Allocate Parking Space",
+              "Department": "Facilities",
+              "TaskStatus": "Not Started"
+            }
+          },
+          {
+            "action": "SharePoint - Create item",
+            "list": "WorkflowTasks",
+            "fields": {
+              "TaskName": "Assign Desk/Workspace",
+              "Department": "Facilities",
+              "TaskStatus": "Not Started",
+              "DueDate": "@{triggerBody()?['StartDate']}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 8,
+      "stepName": "Notify Manager",
+      "action": "Send an email (V2)",
+      "configuration": {
+        "to": "@{triggerBody()?['Manager']?['Email']}",
+        "subject": "New Team Member Joining: @{variables('varEmployeeName')}",
+        "body": "<p>Dear Manager,</p><p>A new team member, <strong>@{variables('varEmployeeName')}</strong>, will be joining your team on <strong>@{formatDateTime(triggerBody()?['StartDate'], 'dd MMM yyyy')}</strong>.</p><p><strong>Department:</strong> @{triggerBody()?['Department']}<br><strong>Job Title:</strong> @{triggerBody()?['JobTitle']}<br><strong>Location:</strong> @{triggerBody()?['Location']}</p><p>Please ensure you prepare for their arrival and schedule time for their first day.</p><p>Track onboarding progress: <a href='<SharePoint URL>/LifecycleRequests'>View Request @{variables('varRequestID')}</a></p>",
+        "importance": "Normal"
+      }
+    },
+    {
+      "stepNumber": 9,
+      "stepName": "Notify HR Team",
+      "action": "Post message in a chat or channel",
+      "configuration": {
+        "team": "HR Operations",
+        "channel": "Onboarding",
+        "message": "New onboarding request created for @{variables('varEmployeeName')} - Start Date: @{formatDateTime(triggerBody()?['StartDate'], 'dd MMM yyyy')} - Request ID: @{variables('varRequestID')}"
+      }
+    },
+    {
+      "stepNumber": 10,
+      "stepName": "Create Audit Log Entry",
+      "action": "SharePoint - Create item",
+      "configuration": {
+        "list": "AuditTrail",
+        "fields": {
+          "AuditID": "@{concat('AUD-', formatDateTime(utcNow(), 'yyyyMMdd'), '-', padLeft(rand(1, 999999), 6, '0'))}",
+          "Timestamp": "@{utcNow()}",
+          "User": "@{triggerBody()?['Author']?['Email']}",
+          "Action": "Created",
+          "EntityType": "Lifecycle Request",
+          "EntityID": "@{variables('varRequestID')}",
+          "EntityName": "Onboarding - @{variables('varEmployeeName')}",
+          "ActionDescription": "New onboarding request created via automated flow",
+          "Department": "Human Resources",
+          "IsAutomated": true,
+          "FlowName": "New Hire Process - Pre-Onboarding",
+          "IsSuccessful": true
+        }
+      }
+    }
+  ],
+  "errorHandling": {
+    "configureRunAfter": {
+      "onFailure": [
+        {
+          "action": "Send an email (V2)",
+          "to": "<HR Admin Email>",
+          "subject": "Error in New Hire Process Flow",
+          "body": "An error occurred while processing new hire @{variables('varEmployeeName')}. Error: @{body('Create_Lifecycle_Request')?['error']}"
+        },
+        {
+          "action": "SharePoint - Create item",
+          "list": "AuditTrail",
+          "fields": {
+            "Action": "Error",
+            "EntityType": "Lifecycle Request",
+            "IsSuccessful": false,
+            "ErrorMessage": "@{body('Create_Lifecycle_Request')?['error']}",
+            "Severity": "High"
+          }
+        }
+      ]
+    }
+  },
+  "settings": {
+    "concurrency": {
+      "enabled": true,
+      "runs": 25
+    },
+    "retryPolicy": {
+      "type": "exponential",
+      "count": 3,
+      "interval": "PT1M"
+    }
+  },
+  "connections": [
+    "SharePoint",
+    "Office 365 Outlook",
+    "Microsoft Teams"
+  ],
+  "testScenarios": [
+    {
+      "scenario": "Create new employee with Pre-Onboarding status",
+      "expectedResult": "Lifecycle request created with all department tasks"
+    },
+    {
+      "scenario": "Start date is 5 days from now",
+      "expectedResult": "All tasks have appropriate due dates"
+    }
+  ]
+}

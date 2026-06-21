@@ -1,0 +1,327 @@
+{
+  "listName": "HRKnowledgeBase",
+  "description": "Knowledge base for Copilot Studio and employee self-service",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": true,
+  "columns": [
+    {
+      "internalName": "ArticleID",
+      "displayName": "Article ID",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Auto-generated: KB-####"
+    },
+    {
+      "internalName": "Question",
+      "displayName": "Question / Title",
+      "type": "Text",
+      "required": true,
+      "maxLength": 500,
+      "indexed": true
+    },
+    {
+      "internalName": "Answer",
+      "displayName": "Answer / Content",
+      "type": "Note",
+      "required": true,
+      "richText": true,
+      "numberOfLines": 10
+    },
+    {
+      "internalName": "Category",
+      "displayName": "Category",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Onboarding",
+        "Offboarding",
+        "Benefits",
+        "Payroll",
+        "Time Off / Leave",
+        "Performance Reviews",
+        "Training & Development",
+        "IT Support",
+        "Equipment",
+        "Facilities",
+        "Policies & Procedures",
+        "Compliance",
+        "Security",
+        "Internal Transfer",
+        "Travel & Expenses",
+        "General HR",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "SubCategory",
+      "displayName": "Sub Category",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100
+    },
+    {
+      "internalName": "Tags",
+      "displayName": "Tags",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 2,
+      "description": "Comma-separated tags for search"
+    },
+    {
+      "internalName": "ArticleStatus",
+      "displayName": "Article Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Draft",
+        "Under Review",
+        "Published",
+        "Archived",
+        "Needs Update"
+      ],
+      "defaultValue": "Draft"
+    },
+    {
+      "internalName": "Audience",
+      "displayName": "Target Audience",
+      "type": "Choice",
+      "required": false,
+      "allowMultipleValues": true,
+      "choices": [
+        "All Employees",
+        "New Hires",
+        "Managers",
+        "HR Team",
+        "IT Team",
+        "Facilities Team",
+        "Finance Team",
+        "Executives"
+      ]
+    },
+    {
+      "internalName": "Visibility",
+      "displayName": "Visibility",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Public - All Employees",
+        "Internal - HR Only",
+        "Internal - Managers",
+        "Copilot Only"
+      ],
+      "defaultValue": "Public - All Employees"
+    },
+    {
+      "internalName": "PublishDate",
+      "displayName": "Publish Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "LastReviewedDate",
+      "displayName": "Last Reviewed Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "ReviewFrequency",
+      "displayName": "Review Frequency",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Monthly",
+        "Quarterly",
+        "Semi-Annual",
+        "Annual",
+        "As Needed"
+      ],
+      "defaultValue": "Quarterly"
+    },
+    {
+      "internalName": "NextReviewDate",
+      "displayName": "Next Review Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "Author",
+      "displayName": "Author",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "Reviewer",
+      "displayName": "Reviewer",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "RelatedPolicy",
+      "displayName": "Related Policy Document",
+      "type": "URL",
+      "required": false,
+      "format": "Hyperlink"
+    },
+    {
+      "internalName": "RelatedLink",
+      "displayName": "Related Link",
+      "type": "URL",
+      "required": false,
+      "format": "Hyperlink"
+    },
+    {
+      "internalName": "ViewCount",
+      "displayName": "View Count",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 0,
+      "defaultValue": "0"
+    },
+    {
+      "internalName": "HelpfulVotes",
+      "displayName": "Helpful Votes",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 0,
+      "defaultValue": "0"
+    },
+    {
+      "internalName": "NotHelpfulVotes",
+      "displayName": "Not Helpful Votes",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 0,
+      "defaultValue": "0"
+    },
+    {
+      "internalName": "IsFeatured",
+      "displayName": "Is Featured",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No"
+    },
+    {
+      "internalName": "IsCopilotEnabled",
+      "displayName": "Enable for Copilot",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "Yes",
+      "description": "Include in Copilot Studio knowledge base"
+    },
+    {
+      "internalName": "SearchKeywords",
+      "displayName": "Search Keywords",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 3,
+      "description": "Additional keywords for improved search and Copilot matching"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Internal Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Published Articles",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='ArticleStatus'/><Value Type='Choice'>Published</Value></Eq></Where>",
+      "columns": [
+        "Question",
+        "Category",
+        "PublishDate",
+        "ViewCount",
+        "HelpfulVotes"
+      ]
+    },
+    {
+      "viewName": "Copilot Knowledge Base",
+      "viewType": "Standard",
+      "query": "<Where><And><Eq><FieldRef Name='ArticleStatus'/><Value Type='Choice'>Published</Value></Eq><Eq><FieldRef Name='IsCopilotEnabled'/><Value Type='Boolean'>1</Value></Eq></And></Where>",
+      "columns": [
+        "ArticleID",
+        "Question",
+        "Category",
+        "Tags"
+      ]
+    },
+    {
+      "viewName": "By Category",
+      "viewType": "Standard",
+      "groupBy": "Category",
+      "query": "<Where><Eq><FieldRef Name='ArticleStatus'/><Value Type='Choice'>Published</Value></Eq></Where>",
+      "columns": [
+        "Question",
+        "Category",
+        "ViewCount"
+      ]
+    },
+    {
+      "viewName": "Needs Review",
+      "viewType": "Standard",
+      "query": "<Where><Or><IsNotNull><FieldRef Name='NextReviewDate'/></IsNotNull><Eq><FieldRef Name='ArticleStatus'/><Value Type='Choice'>Needs Update</Value></Eq></Or></Where>",
+      "columns": [
+        "Question",
+        "Category",
+        "LastReviewedDate",
+        "NextReviewDate",
+        "Reviewer"
+      ]
+    },
+    {
+      "viewName": "Most Viewed",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='ArticleStatus'/><Value Type='Choice'>Published</Value></Eq></Where>",
+      "orderBy": "ViewCount",
+      "orderDirection": "Descending",
+      "rowLimit": 20,
+      "columns": [
+        "Question",
+        "Category",
+        "ViewCount",
+        "HelpfulVotes"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "All Employees",
+        "permissions": ["View"]
+      },
+      {
+        "roleName": "Copilot Service Account",
+        "permissions": ["View", "Read"]
+      }
+    ]
+  }
+}

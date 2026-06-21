@@ -1,0 +1,288 @@
+{
+  "listName": "Employees",
+  "description": "Central employee master data repository",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": false,
+  "columns": [
+    {
+      "internalName": "EmployeeNumber",
+      "displayName": "Employee Number",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 20,
+      "indexed": true,
+      "description": "Unique employee identifier",
+      "validation": {
+        "formula": "=LEN([EmployeeNumber])>=5",
+        "message": "Employee number must be at least 5 characters"
+      }
+    },
+    {
+      "internalName": "FirstName",
+      "displayName": "First Name",
+      "type": "Text",
+      "required": true,
+      "maxLength": 100,
+      "indexed": true
+    },
+    {
+      "internalName": "LastName",
+      "displayName": "Last Name",
+      "type": "Text",
+      "required": true,
+      "maxLength": 100,
+      "indexed": true
+    },
+    {
+      "internalName": "Email",
+      "displayName": "Email",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 255,
+      "indexed": true,
+      "validation": {
+        "formula": "=IF(ISERROR(FIND(\"@\",[Email])),FALSE,TRUE)",
+        "message": "Please enter a valid email address"
+      }
+    },
+    {
+      "internalName": "WorkPhone",
+      "displayName": "Work Phone",
+      "type": "Text",
+      "required": false,
+      "maxLength": 20
+    },
+    {
+      "internalName": "MobilePhone",
+      "displayName": "Mobile Phone",
+      "type": "Text",
+      "required": false,
+      "maxLength": 20
+    },
+    {
+      "internalName": "Department",
+      "displayName": "Department",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Operations",
+        "Sales",
+        "Marketing",
+        "Legal",
+        "Compliance",
+        "Customer Service",
+        "Research & Development",
+        "Facilities",
+        "Executive"
+      ],
+      "defaultValue": ""
+    },
+    {
+      "internalName": "JobTitle",
+      "displayName": "Job Title",
+      "type": "Text",
+      "required": true,
+      "maxLength": 150
+    },
+    {
+      "internalName": "Manager",
+      "displayName": "Manager",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "Employees",
+      "lookupField": "Title",
+      "allowMultipleValues": false,
+      "description": "Direct reporting manager"
+    },
+    {
+      "internalName": "EmployeeStatus",
+      "displayName": "Employee Status",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Pre-Onboarding",
+        "Active",
+        "On Leave",
+        "Suspended",
+        "Notice Period",
+        "Terminated",
+        "Retired"
+      ],
+      "defaultValue": "Pre-Onboarding"
+    },
+    {
+      "internalName": "EmployeeType",
+      "displayName": "Employee Type",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Full-Time",
+        "Part-Time",
+        "Contract",
+        "Temporary",
+        "Intern"
+      ],
+      "defaultValue": "Full-Time"
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "Start Date",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "EndDate",
+      "displayName": "End Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "Location",
+      "displayName": "Office Location",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Headquarters",
+        "Regional Office - North",
+        "Regional Office - South",
+        "Regional Office - East",
+        "Regional Office - West",
+        "Remote"
+      ]
+    },
+    {
+      "internalName": "WorkLocation",
+      "displayName": "Work Location Type",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "On-Site",
+        "Hybrid",
+        "Remote"
+      ],
+      "defaultValue": "On-Site"
+    },
+    {
+      "internalName": "CostCenter",
+      "displayName": "Cost Center",
+      "type": "Text",
+      "required": false,
+      "maxLength": 50
+    },
+    {
+      "internalName": "EmployeePhoto",
+      "displayName": "Employee Photo",
+      "type": "URL",
+      "required": false,
+      "format": "Image"
+    },
+    {
+      "internalName": "EntraIDObjectId",
+      "displayName": "Entra ID Object ID",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100,
+      "indexed": true,
+      "description": "Microsoft Entra ID unique identifier"
+    },
+    {
+      "internalName": "SecurityClearance",
+      "displayName": "Security Clearance Level",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "None",
+        "Basic",
+        "Confidential",
+        "Secret",
+        "Top Secret"
+      ],
+      "defaultValue": "Basic"
+    },
+    {
+      "internalName": "LastReviewDate",
+      "displayName": "Last Performance Review",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 6
+    }
+  ],
+  "views": [
+    {
+      "viewName": "All Active Employees",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='EmployeeStatus'/><Value Type='Choice'>Active</Value></Eq></Where>",
+      "columns": [
+        "EmployeeNumber",
+        "FirstName",
+        "LastName",
+        "Email",
+        "Department",
+        "JobTitle",
+        "Manager",
+        "StartDate"
+      ]
+    },
+    {
+      "viewName": "Pre-Onboarding",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='EmployeeStatus'/><Value Type='Choice'>Pre-Onboarding</Value></Eq></Where>",
+      "columns": [
+        "EmployeeNumber",
+        "FirstName",
+        "LastName",
+        "Email",
+        "Department",
+        "StartDate"
+      ]
+    },
+    {
+      "viewName": "Notice Period",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='EmployeeStatus'/><Value Type='Choice'>Notice Period</Value></Eq></Where>",
+      "columns": [
+        "EmployeeNumber",
+        "FirstName",
+        "LastName",
+        "Department",
+        "EndDate"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "Manager View",
+        "permissions": ["View"]
+      },
+      {
+        "roleName": "Employee Self-Service",
+        "permissions": ["View Own"]
+      }
+    ]
+  }
+}

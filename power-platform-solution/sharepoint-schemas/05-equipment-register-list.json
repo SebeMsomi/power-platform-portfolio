@@ -1,0 +1,307 @@
+{
+  "listName": "EquipmentRegister",
+  "description": "Tracking of all employee equipment and assets",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": true,
+  "columns": [
+    {
+      "internalName": "AssetTag",
+      "displayName": "Asset Tag",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Unique asset identifier"
+    },
+    {
+      "internalName": "DeviceType",
+      "displayName": "Device Type",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Laptop",
+        "Desktop",
+        "Monitor",
+        "Mobile Phone",
+        "Tablet",
+        "Keyboard",
+        "Mouse",
+        "Headset",
+        "Docking Station",
+        "Webcam",
+        "Printer",
+        "Access Card",
+        "Key",
+        "Parking Pass",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Manufacturer",
+      "displayName": "Manufacturer",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100
+    },
+    {
+      "internalName": "Model",
+      "displayName": "Model",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100
+    },
+    {
+      "internalName": "SerialNumber",
+      "displayName": "Serial Number",
+      "type": "Text",
+      "required": false,
+      "unique": true,
+      "maxLength": 100,
+      "indexed": true
+    },
+    {
+      "internalName": "AssetValue",
+      "displayName": "Asset Value",
+      "type": "Currency",
+      "required": false,
+      "currencyLocaleId": 1033,
+      "min": 0
+    },
+    {
+      "internalName": "PurchaseDate",
+      "displayName": "Purchase Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "WarrantyExpiryDate",
+      "displayName": "Warranty Expiry Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "AssetStatus",
+      "displayName": "Asset Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Available",
+        "Assigned",
+        "In Repair",
+        "Retired",
+        "Lost",
+        "Stolen",
+        "Disposed"
+      ],
+      "defaultValue": "Available"
+    },
+    {
+      "internalName": "AssignedTo",
+      "displayName": "Assigned To",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "Employees",
+      "lookupField": "Title",
+      "allowMultipleValues": false,
+      "indexed": true,
+      "additionalFields": ["EmployeeNumber", "Department"]
+    },
+    {
+      "internalName": "AssignmentDate",
+      "displayName": "Assignment Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "ExpectedReturnDate",
+      "displayName": "Expected Return Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "description": "Expected date for equipment return during offboarding"
+    },
+    {
+      "internalName": "ActualReturnDate",
+      "displayName": "Actual Return Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "ReturnCondition",
+      "displayName": "Return Condition",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Excellent",
+        "Good",
+        "Fair",
+        "Poor",
+        "Damaged",
+        "Not Returned"
+      ]
+    },
+    {
+      "internalName": "Location",
+      "displayName": "Current Location",
+      "type": "Text",
+      "required": false,
+      "maxLength": 200
+    },
+    {
+      "internalName": "Department",
+      "displayName": "Department",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Operations",
+        "Sales",
+        "Marketing",
+        "Legal",
+        "Facilities",
+        "Shared Pool"
+      ]
+    },
+    {
+      "internalName": "IsHighValue",
+      "displayName": "Is High Value Asset",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No",
+      "description": "Assets over $1000"
+    },
+    {
+      "internalName": "RequiresReturn",
+      "displayName": "Requires Return",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "Yes"
+    },
+    {
+      "internalName": "MaintenanceSchedule",
+      "displayName": "Maintenance Schedule",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "None",
+        "Quarterly",
+        "Semi-Annual",
+        "Annual"
+      ]
+    },
+    {
+      "internalName": "LastMaintenanceDate",
+      "displayName": "Last Maintenance Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "NextMaintenanceDate",
+      "displayName": "Next Maintenance Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "DaysAssigned",
+      "displayName": "Days Assigned",
+      "type": "Calculated",
+      "formula": "=IF([AssignmentDate],TODAY()-[AssignmentDate],0)",
+      "returnType": "Number"
+    },
+    {
+      "internalName": "IsOverdue",
+      "displayName": "Return Overdue",
+      "type": "Calculated",
+      "formula": "=IF(AND([ExpectedReturnDate],ISBLANK([ActualReturnDate]),[ExpectedReturnDate]<TODAY()),\"Yes\",\"No\")",
+      "returnType": "Text"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Available Equipment",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='AssetStatus'/><Value Type='Choice'>Available</Value></Eq></Where>",
+      "columns": [
+        "AssetTag",
+        "DeviceType",
+        "Manufacturer",
+        "Model",
+        "AssetValue",
+        "Location"
+      ]
+    },
+    {
+      "viewName": "Assigned Equipment",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='AssetStatus'/><Value Type='Choice'>Assigned</Value></Eq></Where>",
+      "columns": [
+        "AssetTag",
+        "DeviceType",
+        "AssignedTo",
+        "AssignmentDate",
+        "DaysAssigned"
+      ]
+    },
+    {
+      "viewName": "Pending Return",
+      "viewType": "Standard",
+      "query": "<Where><And><IsNotNull><FieldRef Name='ExpectedReturnDate'/></IsNotNull><IsNull><FieldRef Name='ActualReturnDate'/></IsNull></And></Where>",
+      "columns": [
+        "AssetTag",
+        "DeviceType",
+        "AssignedTo",
+        "ExpectedReturnDate",
+        "IsOverdue"
+      ]
+    },
+    {
+      "viewName": "High Value Assets",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='IsHighValue'/><Value Type='Boolean'>1</Value></Eq></Where>",
+      "columns": [
+        "AssetTag",
+        "DeviceType",
+        "AssetValue",
+        "AssetStatus",
+        "AssignedTo"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "IT & Facilities Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "All Users",
+        "permissions": ["View"]
+      }
+    ]
+  }
+}

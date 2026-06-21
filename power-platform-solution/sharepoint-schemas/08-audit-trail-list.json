@@ -1,0 +1,327 @@
+{
+  "listName": "AuditTrail",
+  "description": "Comprehensive audit log for all lifecycle activities",
+  "listTemplate": "Custom List",
+  "enableVersioning": false,
+  "enableContentTypes": false,
+  "enableAttachments": false,
+  "columns": [
+    {
+      "internalName": "AuditID",
+      "displayName": "Audit ID",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Auto-generated: AUD-YYYYMMDD-######"
+    },
+    {
+      "internalName": "Timestamp",
+      "displayName": "Timestamp",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateTime",
+      "indexed": true,
+      "defaultValue": "[Today]"
+    },
+    {
+      "internalName": "User",
+      "displayName": "User",
+      "type": "User",
+      "required": true,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "UserEmail",
+      "displayName": "User Email",
+      "type": "Text",
+      "required": false,
+      "maxLength": 255
+    },
+    {
+      "internalName": "Action",
+      "displayName": "Action",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Created",
+        "Updated",
+        "Deleted",
+        "Viewed",
+        "Approved",
+        "Rejected",
+        "Submitted",
+        "Assigned",
+        "Completed",
+        "Cancelled",
+        "Escalated",
+        "Provisioned",
+        "Deprovisioned",
+        "Exported",
+        "Printed",
+        "Downloaded",
+        "Access Granted",
+        "Access Revoked",
+        "Status Changed",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "EntityType",
+      "displayName": "Entity Type",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Employee",
+        "Lifecycle Request",
+        "Workflow Task",
+        "Approval",
+        "Equipment",
+        "System Access",
+        "Document",
+        "Compliance Alert",
+        "Configuration",
+        "Report"
+      ]
+    },
+    {
+      "internalName": "EntityID",
+      "displayName": "Entity ID",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100,
+      "indexed": true,
+      "description": "ID of the affected entity"
+    },
+    {
+      "internalName": "EntityName",
+      "displayName": "Entity Name",
+      "type": "Text",
+      "required": false,
+      "maxLength": 255
+    },
+    {
+      "internalName": "Request",
+      "displayName": "Related Request",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "LifecycleRequests",
+      "lookupField": "RequestID",
+      "allowMultipleValues": false,
+      "indexed": true
+    },
+    {
+      "internalName": "ActionDescription",
+      "displayName": "Action Description",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "OldValue",
+      "displayName": "Old Value",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 2,
+      "description": "Previous value before change"
+    },
+    {
+      "internalName": "NewValue",
+      "displayName": "New Value",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 2,
+      "description": "New value after change"
+    },
+    {
+      "internalName": "Department",
+      "displayName": "Department",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Payroll",
+        "Operations",
+        "Facilities",
+        "Security",
+        "Compliance",
+        "Legal",
+        "Management",
+        "System"
+      ]
+    },
+    {
+      "internalName": "IPAddress",
+      "displayName": "IP Address",
+      "type": "Text",
+      "required": false,
+      "maxLength": 50
+    },
+    {
+      "internalName": "UserAgent",
+      "displayName": "User Agent",
+      "type": "Text",
+      "required": false,
+      "maxLength": 500,
+      "description": "Browser/device information"
+    },
+    {
+      "internalName": "SessionID",
+      "displayName": "Session ID",
+      "type": "Text",
+      "required": false,
+      "maxLength": 100
+    },
+    {
+      "internalName": "Severity",
+      "displayName": "Severity",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Information",
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "defaultValue": "Information"
+    },
+    {
+      "internalName": "IsAutomated",
+      "displayName": "Is Automated Action",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No",
+      "description": "True if action performed by Power Automate flow"
+    },
+    {
+      "internalName": "FlowName",
+      "displayName": "Flow Name",
+      "type": "Text",
+      "required": false,
+      "maxLength": 200,
+      "description": "Name of Power Automate flow if automated"
+    },
+    {
+      "internalName": "IsSuccessful",
+      "displayName": "Is Successful",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "Yes"
+    },
+    {
+      "internalName": "ErrorMessage",
+      "displayName": "Error Message",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "ComplianceFlag",
+      "displayName": "Compliance Flag",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No",
+      "description": "Mark for compliance review"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Recent Activity",
+      "viewType": "Standard",
+      "query": "<OrderBy><FieldRef Name='Timestamp' Ascending='FALSE'/></OrderBy>",
+      "rowLimit": 100,
+      "columns": [
+        "Timestamp",
+        "User",
+        "Action",
+        "EntityType",
+        "EntityName",
+        "ActionDescription"
+      ]
+    },
+    {
+      "viewName": "Failed Actions",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='IsSuccessful'/><Value Type='Boolean'>0</Value></Eq></Where>",
+      "columns": [
+        "Timestamp",
+        "User",
+        "Action",
+        "EntityType",
+        "ErrorMessage"
+      ]
+    },
+    {
+      "viewName": "High Severity Events",
+      "viewType": "Standard",
+      "query": "<Where><In><FieldRef Name='Severity'/><Values><Value Type='Choice'>High</Value><Value Type='Choice'>Critical</Value></Values></In></Where>",
+      "columns": [
+        "Timestamp",
+        "User",
+        "Action",
+        "EntityType",
+        "Severity",
+        "ActionDescription"
+      ]
+    },
+    {
+      "viewName": "Compliance Review",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='ComplianceFlag'/><Value Type='Boolean'>1</Value></Eq></Where>",
+      "columns": [
+        "Timestamp",
+        "User",
+        "Action",
+        "EntityType",
+        "EntityName"
+      ]
+    },
+    {
+      "viewName": "Automated Actions",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='IsAutomated'/><Value Type='Boolean'>1</Value></Eq></Where>",
+      "columns": [
+        "Timestamp",
+        "FlowName",
+        "Action",
+        "EntityType",
+        "IsSuccessful"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "System",
+        "permissions": ["View", "Add"]
+      },
+      {
+        "roleName": "Compliance & Security Full Access",
+        "permissions": ["View", "Export"]
+      },
+      {
+        "roleName": "All Other Users",
+        "permissions": []
+      }
+    ]
+  },
+  "retentionPolicy": {
+    "enabled": true,
+    "retentionPeriodDays": 2555,
+    "description": "Retain audit logs for 7 years for compliance"
+  }
+}

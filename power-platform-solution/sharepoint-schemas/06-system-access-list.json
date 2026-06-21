@@ -1,0 +1,332 @@
+{
+  "listName": "SystemAccess",
+  "description": "Tracking of system access provisioning and deprovisioning",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": true,
+  "enableAttachments": false,
+  "columns": [
+    {
+      "internalName": "AccessID",
+      "displayName": "Access ID",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Auto-generated: ACC-YYYYMMDD-####"
+    },
+    {
+      "internalName": "Employee",
+      "displayName": "Employee",
+      "type": "Lookup",
+      "required": true,
+      "lookupList": "Employees",
+      "lookupField": "Title",
+      "allowMultipleValues": false,
+      "indexed": true,
+      "additionalFields": ["EmployeeNumber", "Email", "Department"]
+    },
+    {
+      "internalName": "SystemName",
+      "displayName": "System Name",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Microsoft 365",
+        "Entra ID / Azure AD",
+        "SharePoint Online",
+        "Microsoft Teams",
+        "Exchange Online",
+        "OneDrive",
+        "Power Platform",
+        "Dynamics 365",
+        "ERP System",
+        "CRM System",
+        "HRIS System",
+        "Payroll System",
+        "Time Tracking",
+        "VPN Access",
+        "Building Access System",
+        "Parking System",
+        "Document Management",
+        "Project Management",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "SystemCategory",
+      "displayName": "System Category",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Email & Communication",
+        "Collaboration",
+        "Business Applications",
+        "Security & Access",
+        "HR Systems",
+        "Finance Systems",
+        "Facilities",
+        "Development Tools",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "AccessType",
+      "displayName": "Access Type",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Basic User",
+        "Power User",
+        "Administrator",
+        "Read Only",
+        "Custom Role"
+      ],
+      "defaultValue": "Basic User"
+    },
+    {
+      "internalName": "SecurityGroups",
+      "displayName": "Security Groups",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 4,
+      "description": "List of security groups assigned"
+    },
+    {
+      "internalName": "AccessStatus",
+      "displayName": "Access Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Pending Provisioning",
+        "Active",
+        "Suspended",
+        "Pending Deprovisioning",
+        "Deprovisioned",
+        "Access Denied"
+      ],
+      "defaultValue": "Pending Provisioning"
+    },
+    {
+      "internalName": "RequestDate",
+      "displayName": "Request Date",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateTime",
+      "defaultValue": "[Today]"
+    },
+    {
+      "internalName": "RequestedBy",
+      "displayName": "Requested By",
+      "type": "User",
+      "required": true,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "ProvisionDate",
+      "displayName": "Provision Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime",
+      "indexed": true
+    },
+    {
+      "internalName": "ProvisionedBy",
+      "displayName": "Provisioned By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "DeprovisionDate",
+      "displayName": "Deprovision Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "DeprovisionedBy",
+      "displayName": "Deprovisioned By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "ExpiryDate",
+      "displayName": "Access Expiry Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true,
+      "description": "For temporary or contract employees"
+    },
+    {
+      "internalName": "IsElevatedAccess",
+      "displayName": "Is Elevated Access",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No",
+      "description": "Requires additional approval"
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "Approval Status",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Not Required",
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      "defaultValue": "Not Required"
+    },
+    {
+      "internalName": "ApprovedBy",
+      "displayName": "Approved By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "ApprovalDate",
+      "displayName": "Approval Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "LastReviewDate",
+      "displayName": "Last Access Review Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly"
+    },
+    {
+      "internalName": "NextReviewDate",
+      "displayName": "Next Access Review Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "ComplianceStatus",
+      "displayName": "Compliance Status",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Compliant",
+        "Review Required",
+        "Non-Compliant"
+      ]
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "DaysActive",
+      "displayName": "Days Active",
+      "type": "Calculated",
+      "formula": "=IF([ProvisionDate],IF([AccessStatus]=\"Deprovisioned\",[DeprovisionDate]-[ProvisionDate],TODAY()-[ProvisionDate]),0)",
+      "returnType": "Number"
+    },
+    {
+      "internalName": "IsExpired",
+      "displayName": "Is Expired",
+      "type": "Calculated",
+      "formula": "=IF(AND([ExpiryDate],[ExpiryDate]<TODAY(),ISBLANK([DeprovisionDate])),\"Yes\",\"No\")",
+      "returnType": "Text"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Active Access",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='AccessStatus'/><Value Type='Choice'>Active</Value></Eq></Where>",
+      "columns": [
+        "AccessID",
+        "Employee",
+        "SystemName",
+        "AccessType",
+        "ProvisionDate",
+        "NextReviewDate"
+      ]
+    },
+    {
+      "viewName": "Pending Provisioning",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='AccessStatus'/><Value Type='Choice'>Pending Provisioning</Value></Eq></Where>",
+      "columns": [
+        "AccessID",
+        "Employee",
+        "SystemName",
+        "AccessType",
+        "RequestDate",
+        "RequestedBy"
+      ]
+    },
+    {
+      "viewName": "Pending Deprovisioning",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='AccessStatus'/><Value Type='Choice'>Pending Deprovisioning</Value></Eq></Where>",
+      "columns": [
+        "AccessID",
+        "Employee",
+        "SystemName",
+        "RequestDate"
+      ]
+    },
+    {
+      "viewName": "Elevated Access",
+      "viewType": "Standard",
+      "query": "<Where><And><Eq><FieldRef Name='IsElevatedAccess'/><Value Type='Boolean'>1</Value></Eq><Eq><FieldRef Name='AccessStatus'/><Value Type='Choice'>Active</Value></Eq></And></Where>",
+      "columns": [
+        "AccessID",
+        "Employee",
+        "SystemName",
+        "AccessType",
+        "ApprovedBy",
+        "NextReviewDate"
+      ]
+    },
+    {
+      "viewName": "Expired Access",
+      "viewType": "Standard",
+      "query": "<Where><And><IsNotNull><FieldRef Name='ExpiryDate'/></IsNotNull><Lt><FieldRef Name='ExpiryDate'/><Value Type='DateTime'><Today/></Value></Lt></And></Where>",
+      "columns": [
+        "AccessID",
+        "Employee",
+        "SystemName",
+        "ExpiryDate",
+        "IsExpired"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "IT & Security Full Access",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "Compliance View",
+        "permissions": ["View"]
+      }
+    ]
+  }
+}

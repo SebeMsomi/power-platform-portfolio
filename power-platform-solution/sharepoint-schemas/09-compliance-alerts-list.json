@@ -1,0 +1,370 @@
+{
+  "listName": "ComplianceAlerts",
+  "description": "System-generated compliance and risk alerts",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": false,
+  "enableAttachments": false,
+  "columns": [
+    {
+      "internalName": "AlertID",
+      "displayName": "Alert ID",
+      "type": "Text",
+      "required": true,
+      "unique": true,
+      "maxLength": 50,
+      "indexed": true,
+      "description": "Auto-generated: ALT-YYYYMMDD-####"
+    },
+    {
+      "internalName": "AlertType",
+      "displayName": "Alert Type",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Missing Approval",
+        "Overdue Task",
+        "Overdue Request",
+        "Unreturned Equipment",
+        "Access Not Revoked",
+        "Payroll Not Terminated",
+        "Document Expired",
+        "Document Missing",
+        "SLA Breach",
+        "Security Violation",
+        "Compliance Gap",
+        "Data Quality Issue",
+        "System Error",
+        "Escalation Required",
+        "Access Review Overdue",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "AlertCategory",
+      "displayName": "Alert Category",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Onboarding",
+        "Offboarding",
+        "Access Management",
+        "Equipment Management",
+        "Document Management",
+        "SLA Management",
+        "Security",
+        "Compliance",
+        "System"
+      ]
+    },
+    {
+      "internalName": "Severity",
+      "displayName": "Severity",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "defaultValue": "Medium"
+    },
+    {
+      "internalName": "AlertStatus",
+      "displayName": "Alert Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "New",
+        "Acknowledged",
+        "In Progress",
+        "Resolved",
+        "Closed",
+        "False Positive",
+        "Escalated"
+      ],
+      "defaultValue": "New"
+    },
+    {
+      "internalName": "GeneratedDate",
+      "displayName": "Generated Date",
+      "type": "DateTime",
+      "required": true,
+      "format": "DateTime",
+      "indexed": true,
+      "defaultValue": "[Today]"
+    },
+    {
+      "internalName": "Employee",
+      "displayName": "Related Employee",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "Employees",
+      "lookupField": "Title",
+      "allowMultipleValues": false,
+      "indexed": true,
+      "additionalFields": ["EmployeeNumber", "Department"]
+    },
+    {
+      "internalName": "LifecycleRequest",
+      "displayName": "Related Request",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "LifecycleRequests",
+      "lookupField": "RequestID",
+      "allowMultipleValues": false,
+      "indexed": true
+    },
+    {
+      "internalName": "WorkflowTask",
+      "displayName": "Related Task",
+      "type": "Lookup",
+      "required": false,
+      "lookupList": "WorkflowTasks",
+      "lookupField": "TaskID",
+      "allowMultipleValues": false
+    },
+    {
+      "internalName": "AlertDescription",
+      "displayName": "Alert Description",
+      "type": "Note",
+      "required": true,
+      "richText": false,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "RecommendedAction",
+      "displayName": "Recommended Action",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 4
+    },
+    {
+      "internalName": "AssignedToDepartment",
+      "displayName": "Assigned To Department",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Payroll",
+        "Facilities",
+        "Security",
+        "Compliance",
+        "Legal",
+        "Management"
+      ]
+    },
+    {
+      "internalName": "AssignedTo",
+      "displayName": "Assigned To",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly",
+      "indexed": true
+    },
+    {
+      "internalName": "AcknowledgedBy",
+      "displayName": "Acknowledged By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "AcknowledgedDate",
+      "displayName": "Acknowledged Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "ResolvedBy",
+      "displayName": "Resolved By",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "ResolvedDate",
+      "displayName": "Resolved Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime"
+    },
+    {
+      "internalName": "ResolutionNotes",
+      "displayName": "Resolution Notes",
+      "type": "Note",
+      "required": false,
+      "richText": true,
+      "numberOfLines": 6
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "Due Date",
+      "type": "DateTime",
+      "required": false,
+      "format": "DateTime",
+      "indexed": true,
+      "description": "Date by which alert must be resolved"
+    },
+    {
+      "internalName": "EscalationLevel",
+      "displayName": "Escalation Level",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "None",
+        "Level 1",
+        "Level 2",
+        "Level 3 - Executive"
+      ],
+      "defaultValue": "None"
+    },
+    {
+      "internalName": "NotificationsSent",
+      "displayName": "Notifications Sent",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "decimals": 0,
+      "defaultValue": "0"
+    },
+    {
+      "internalName": "IsRecurring",
+      "displayName": "Is Recurring Alert",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No"
+    },
+    {
+      "internalName": "ComplianceImpact",
+      "displayName": "Compliance Impact",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "None",
+        "Low",
+        "Medium",
+        "High",
+        "Audit Failure Risk"
+      ]
+    },
+    {
+      "internalName": "RiskScore",
+      "displayName": "Risk Score",
+      "type": "Number",
+      "required": false,
+      "min": 0,
+      "max": 100,
+      "decimals": 0,
+      "description": "Calculated risk score 0-100"
+    },
+    {
+      "internalName": "AlertAge",
+      "displayName": "Alert Age (Days)",
+      "type": "Calculated",
+      "formula": "=IF([AlertStatus]=\"Resolved\",([ResolvedDate]-[GeneratedDate]),IF([AlertStatus]=\"Closed\",0,TODAY()-[GeneratedDate]))",
+      "returnType": "Number"
+    },
+    {
+      "internalName": "IsOverdue",
+      "displayName": "Is Overdue",
+      "type": "Calculated",
+      "formula": "=IF(AND([DueDate],NOT(OR([AlertStatus]=\"Resolved\",[AlertStatus]=\"Closed\")),[DueDate]<TODAY()),\"Yes\",\"No\")",
+      "returnType": "Text"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Active Alerts",
+      "viewType": "Standard",
+      "query": "<Where><In><FieldRef Name='AlertStatus'/><Values><Value Type='Choice'>New</Value><Value Type='Choice'>Acknowledged</Value><Value Type='Choice'>In Progress</Value></Values></In></Where>",
+      "columns": [
+        "AlertID",
+        "AlertType",
+        "Severity",
+        "AlertStatus",
+        "Employee",
+        "AssignedToDepartment",
+        "GeneratedDate",
+        "DueDate"
+      ]
+    },
+    {
+      "viewName": "Critical Alerts",
+      "viewType": "Standard",
+      "query": "<Where><And><Eq><FieldRef Name='Severity'/><Value Type='Choice'>Critical</Value></Eq><Neq><FieldRef Name='AlertStatus'/><Value Type='Choice'>Resolved</Value></Neq></And></Where>",
+      "columns": [
+        "AlertID",
+        "AlertType",
+        "Employee",
+        "AlertDescription",
+        "GeneratedDate",
+        "AssignedTo"
+      ]
+    },
+    {
+      "viewName": "My Alerts",
+      "viewType": "Standard",
+      "query": "<Where><And><Eq><FieldRef Name='AssignedTo'/><Value Type='User'><UserID/></Value></Eq><Neq><FieldRef Name='AlertStatus'/><Value Type='Choice'>Resolved</Value></Neq></And></Where>",
+      "columns": [
+        "AlertID",
+        "AlertType",
+        "Severity",
+        "AlertStatus",
+        "GeneratedDate",
+        "DueDate"
+      ]
+    },
+    {
+      "viewName": "Overdue Alerts",
+      "viewType": "Standard",
+      "query": "<Where><And><IsNotNull><FieldRef Name='DueDate'/></IsNotNull><And><Lt><FieldRef Name='DueDate'/><Value Type='DateTime'><Today/></Value></Lt><Not><Or><Eq><FieldRef Name='AlertStatus'/><Value Type='Choice'>Resolved</Value></Eq><Eq><FieldRef Name='AlertStatus'/><Value Type='Choice'>Closed</Value></Eq></Or></Not></And></And></Where>",
+      "columns": [
+        "AlertID",
+        "AlertType",
+        "Severity",
+        "DueDate",
+        "AssignedTo",
+        "AlertAge"
+      ]
+    },
+    {
+      "viewName": "By Department",
+      "viewType": "Standard",
+      "groupBy": "AssignedToDepartment",
+      "query": "<Where><Neq><FieldRef Name='AlertStatus'/><Value Type='Choice'>Resolved</Value></Neq></Where>",
+      "columns": [
+        "AlertID",
+        "AlertType",
+        "Severity",
+        "AssignedToDepartment",
+        "AssignedTo"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR & Compliance Full Access",
+        "permissions": ["View", "Edit"]
+      },
+      {
+        "roleName": "Department Users",
+        "permissions": ["View", "Edit Own"]
+      }
+    ]
+  }
+}

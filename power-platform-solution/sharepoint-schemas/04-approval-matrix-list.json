@@ -1,0 +1,225 @@
+{
+  "listName": "ApprovalMatrix",
+  "description": "Configuration for approval routing and SLA management",
+  "listTemplate": "Custom List",
+  "enableVersioning": true,
+  "enableContentTypes": false,
+  "enableAttachments": false,
+  "columns": [
+    {
+      "internalName": "ApprovalType",
+      "displayName": "Approval Type",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Onboarding - New Hire",
+        "Onboarding - Contract",
+        "Onboarding - Intern",
+        "Internal Transfer - Department",
+        "Internal Transfer - Location",
+        "Role Change - Promotion",
+        "Role Change - Demotion",
+        "Offboarding - Resignation",
+        "Offboarding - Termination",
+        "Offboarding - Retirement",
+        "Leave of Absence",
+        "Security Access - Elevated",
+        "Equipment Request - High Value"
+      ]
+    },
+    {
+      "internalName": "ApprovalLevel",
+      "displayName": "Approval Level",
+      "type": "Number",
+      "required": true,
+      "min": 1,
+      "max": 5,
+      "decimals": 0,
+      "description": "Sequential approval level (1=first approver)"
+    },
+    {
+      "internalName": "ApproverRole",
+      "displayName": "Approver Role",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Direct Manager",
+        "Department Head",
+        "HR Manager",
+        "HR Director",
+        "IT Manager",
+        "Finance Manager",
+        "Payroll Manager",
+        "Facilities Manager",
+        "Security Manager",
+        "Compliance Officer",
+        "Legal Counsel",
+        "Executive Leadership",
+        "CEO"
+      ]
+    },
+    {
+      "internalName": "PrimaryApprover",
+      "displayName": "Primary Approver",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "SecondaryApprover",
+      "displayName": "Secondary Approver",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly",
+      "description": "Backup approver if primary is unavailable"
+    },
+    {
+      "internalName": "ApproverGroup",
+      "displayName": "Approver Group",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleAndGroups",
+      "description": "Azure AD/Entra ID security group"
+    },
+    {
+      "internalName": "ApprovalMethod",
+      "displayName": "Approval Method",
+      "type": "Choice",
+      "required": true,
+      "choices": [
+        "Single - First Approver",
+        "Single - All Must Approve",
+        "Parallel - Any One Approver",
+        "Sequential - In Order",
+        "Auto-Approve"
+      ],
+      "defaultValue": "Single - First Approver"
+    },
+    {
+      "internalName": "SLAHours",
+      "displayName": "SLA (Hours)",
+      "type": "Number",
+      "required": true,
+      "min": 1,
+      "max": 720,
+      "decimals": 0,
+      "defaultValue": "24"
+    },
+    {
+      "internalName": "EscalationHours",
+      "displayName": "Escalation After (Hours)",
+      "type": "Number",
+      "required": true,
+      "min": 1,
+      "decimals": 0,
+      "description": "Hours before escalation to secondary approver"
+    },
+    {
+      "internalName": "EscalationApprover",
+      "displayName": "Escalation Approver",
+      "type": "User",
+      "required": false,
+      "allowMultipleValues": false,
+      "userSelectionMode": "PeopleOnly"
+    },
+    {
+      "internalName": "RequireComments",
+      "displayName": "Require Comments",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "No"
+    },
+    {
+      "internalName": "IsActive",
+      "displayName": "Is Active",
+      "type": "Boolean",
+      "required": false,
+      "defaultValue": "Yes"
+    },
+    {
+      "internalName": "DepartmentFilter",
+      "displayName": "Department Filter",
+      "type": "Choice",
+      "required": false,
+      "allowMultipleValues": true,
+      "choices": [
+        "All Departments",
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Operations",
+        "Sales",
+        "Marketing",
+        "Legal",
+        "Compliance",
+        "Executive"
+      ],
+      "description": "Apply this approval rule only to selected departments"
+    },
+    {
+      "internalName": "NotificationTemplate",
+      "displayName": "Notification Template",
+      "type": "Choice",
+      "required": false,
+      "choices": [
+        "Standard Approval Request",
+        "Urgent Approval Request",
+        "Escalation Notice",
+        "Overdue Reminder",
+        "Auto-Approved Notice"
+      ]
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Configuration Notes",
+      "type": "Note",
+      "required": false,
+      "richText": false,
+      "numberOfLines": 3
+    }
+  ],
+  "views": [
+    {
+      "viewName": "Active Approvals",
+      "viewType": "Standard",
+      "query": "<Where><Eq><FieldRef Name='IsActive'/><Value Type='Boolean'>1</Value></Eq></Where>",
+      "columns": [
+        "ApprovalType",
+        "ApprovalLevel",
+        "ApproverRole",
+        "PrimaryApprover",
+        "SLAHours",
+        "EscalationHours"
+      ]
+    },
+    {
+      "viewName": "By Approval Type",
+      "viewType": "Standard",
+      "groupBy": "ApprovalType",
+      "columns": [
+        "ApprovalType",
+        "ApprovalLevel",
+        "ApproverRole",
+        "PrimaryApprover",
+        "ApprovalMethod"
+      ]
+    }
+  ],
+  "permissions": {
+    "breakInheritance": true,
+    "roles": [
+      {
+        "roleName": "HR Admin",
+        "permissions": ["View", "Add", "Edit", "Delete"]
+      },
+      {
+        "roleName": "All Users",
+        "permissions": ["View"]
+      }
+    ]
+  }
+}

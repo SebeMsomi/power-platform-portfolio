@@ -1,0 +1,267 @@
+{
+  "flowName": "Dynamic Approval Workflow",
+  "description": "Multi-level approval routing based on approval matrix configuration",
+  "flowType": "Automated Cloud Flow",
+  "trigger": {
+    "type": "SharePoint",
+    "action": "When an item is created or modified",
+    "configuration": {
+      "siteAddress": "<SharePoint Site URL>",
+      "listName": "LifecycleRequests",
+      "condition": "RequestStatus equals 'Pending Approval'"
+    }
+  },
+  "steps": [
+    {
+      "stepNumber": 1,
+      "stepName": "Initialize Variables",
+      "action": "Initialize variable",
+      "variables": [
+        {
+          "name": "varCurrentApprovalLevel",
+          "type": "Integer",
+          "value": 1
+        },
+        {
+          "name": "varMaxApprovalLevel",
+          "type": "Integer",
+          "value": 0
+        },
+        {
+          "name": "varApprovalStatus",
+          "type": "String",
+          "value": "Pending"
+        },
+        {
+          "name": "varApprovalHistory",
+          "type": "Array",
+          "value": []
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "stepName": "Get Approval Matrix Configuration",
+      "action": "SharePoint - Get items",
+      "configuration": {
+        "list": "ApprovalMatrix",
+        "filter": "ApprovalType eq '@{triggerBody()?['LifecycleType']}' and IsActive eq true",
+        "orderBy": "ApprovalLevel",
+        "top": 10
+      }
+    },
+    {
+      "stepNumber": 3,
+      "stepName": "Check If Approvals Required",
+      "action": "Condition",
+      "configuration": {
+        "expression": "@empty(body('Get_Approval_Matrix_Configuration'))",
+        "ifTrue": [
+          {
+            "action": "SharePoint - Update item",
+            "list": "LifecycleRequests",
+            "id": "@{triggerBody()?['ID']}",
+            "fields": {
+              "RequestStatus": "Approved",
+              "CurrentStage": "HR Processing",
+              "ApprovalComments": "Auto-approved - No approval required for this type"
+            }
+          },
+          {
+            "action": "Terminate",
+            "status": "Succeeded"
+          }
+        ],
+        "ifFalse": "Continue"
+      }
+    },
+    {
+      "stepNumber": 4,
+      "stepName": "Set Max Approval Level",
+      "action": "Set variable",
+      "configuration": {
+        "name": "varMaxApprovalLevel",
+        "value": "@{length(body('Get_Approval_Matrix_Configuration'))}"
+      }
+    },
+    {
+      "stepNumber": 5,
+      "stepName": "Loop Through Approval Levels",
+      "action": "Do until",
+      "configuration": {
+        "expression": "@or(equals(variables('varApprovalStatus'), 'Approved'), equals(variables('varApprovalStatus'), 'Rejected'), greaterOrEquals(variables('varCurrentApprovalLevel'), variables('varMaxApprovalLevel')))",
+        "limit": {
+          "count": 10,
+          "timeout": "PT1H"
+        },
+        "actions": [
+          {
+            "action": "Filter array",
+            "from": "@body('Get_Approval_Matrix_Configuration')",
+            "where": "@equals(item()?['ApprovalLevel'], variables('varCurrentApprovalLevel'))",
+            "outputAs": "currentLevelApprovers"
+          },
+          {
+            "action": "Compose",
+            "inputs": "@first(body('Filter_current_level'))",
+            "outputAs": "currentApprover"
+          },
+          {
+            "action": "Get user profile (V2)",
+            "userPrincipalName": "@outputs('Compose_current_approver')?['PrimaryApprover']?['Email']",
+            "outputAs": "approverProfile"
+          },
+          {
+            "action": "Start and wait for an approval",
+            "configuration": {
+              "approvalType": "Approve/Reject - First to respond",
+              "title": "Approval Required: @{triggerBody()?['LifecycleType']} - @{triggerBody()?['Employee']?['Title']}",
+              "assignedTo": "@{outputs('Compose_current_approver')?['PrimaryApprover']?['Email']}",
+              "details": "<strong>Request ID:</strong> @{triggerBody()?['RequestID']}<br><strong>Employee:</strong> @{triggerBody()?['Employee']?['Title']}<br><strong>Department:</strong> @{triggerBody()?['DepartmentTo']}<br><strong>Effective Date:</strong> @{formatDateTime(triggerBody()?['EffectiveDate'], 'dd MMM yyyy')}<br><strong>Reason:</strong> @{triggerBody()?['ReasonForChange']}<br><br><strong>Approval Level:</strong> @{variables('varCurrentApprovalLevel')} of @{variables('varMaxApprovalLevel')}<br><strong>Your Role:</strong> @{outputs('Compose_current_approver')?['ApproverRole']}",
+              "itemLink": "<SharePoint URL>/LifecycleRequests/DispForm.aspx?ID=@{triggerBody()?['ID']}",
+              "itemLinkDescription": "View Full Request Details",
+              "requestorsEmail": "@{triggerBody()?['RequestedBy']?['Email']}",
+              "enableNotifications": true,
+              "enableReassignment": true
+            },
+            "timeoutSettings": {
+              "timeout": "@{outputs('Compose_current_approver')?['SLAHours']}H",
+              "onTimeout": "Escalate"
+            }
+          },
+          {
+            "action": "Condition - Check Approval Response",
+            "expression": "@equals(body('Start_and_wait_for_approval')?['outcome'], 'Approve')",
+            "ifTrue": [
+              {
+                "action": "Append to array variable",
+                "name": "varApprovalHistory",
+                "value": {
+                  "Level": "@{variables('varCurrentApprovalLevel')}",
+                  "Approver": "@{outputs('Compose_current_approver')?['PrimaryApprover']?['DisplayName']}",
+                  "Response": "Approved",
+                  "Comments": "@{body('Start_and_wait_for_approval')?['comments']}",
+                  "Timestamp": "@{utcNow()}"
+                }
+              },
+              {
+                "action": "Increment variable",
+                "name": "varCurrentApprovalLevel",
+                "value": 1
+              },
+              {
+                "action": "Condition - Check If Final Approval",
+                "expression": "@greaterOrEquals(variables('varCurrentApprovalLevel'), add(variables('varMaxApprovalLevel'), 1))",
+                "ifTrue": [
+                  {
+                    "action": "Set variable",
+                    "name": "varApprovalStatus",
+                    "value": "Approved"
+                  }
+                ]
+              }
+            ],
+            "ifFalse": [
+              {
+                "action": "Append to array variable",
+                "name": "varApprovalHistory",
+                "value": {
+                  "Level": "@{variables('varCurrentApprovalLevel')}",
+                  "Approver": "@{outputs('Compose_current_approver')?['PrimaryApprover']?['DisplayName']}",
+                  "Response": "Rejected",
+                  "Comments": "@{body('Start_and_wait_for_approval')?['comments']}",
+                  "Timestamp": "@{utcNow()}"
+                }
+              },
+              {
+                "action": "Set variable",
+                "name": "varApprovalStatus",
+                "value": "Rejected"
+              }
+            ]
+          },
+          {
+            "action": "Create Audit Log",
+            "list": "AuditTrail",
+            "fields": {
+              "Action": "@{if(equals(body('Start_and_wait_for_approval')?['outcome'], 'Approve'), 'Approved', 'Rejected')}",
+              "EntityType": "Lifecycle Request",
+              "EntityID": "@{triggerBody()?['RequestID']}",
+              "User": "@{outputs('Compose_current_approver')?['PrimaryApprover']?['Email']}",
+              "ActionDescription": "Level @{variables('varCurrentApprovalLevel')} approval: @{body('Start_and_wait_for_approval')?['outcome']} - @{body('Start_and_wait_for_approval')?['comments']}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepNumber": 6,
+      "stepName": "Update Request Status",
+      "action": "SharePoint - Update item",
+      "configuration": {
+        "list": "LifecycleRequests",
+        "id": "@{triggerBody()?['ID']}",
+        "fields": {
+          "RequestStatus": "@{if(equals(variables('varApprovalStatus'), 'Approved'), 'Approved', 'Rejected')}",
+          "CurrentStage": "@{if(equals(variables('varApprovalStatus'), 'Approved'), 'HR Processing', 'Rejected')}",
+          "ApprovalComments": "@{variables('varApprovalHistory')}"
+        }
+      }
+    },
+    {
+      "stepNumber": 7,
+      "stepName": "Notify Requestor",
+      "action": "Send an email (V2)",
+      "configuration": {
+        "to": "@{triggerBody()?['RequestedBy']?['Email']}",
+        "subject": "@{if(equals(variables('varApprovalStatus'), 'Approved'), '✓ Approved', '✗ Rejected')}: @{triggerBody()?['RequestID']}",
+        "body": "<p>Your lifecycle request has been <strong>@{variables('varApprovalStatus')}</strong>.</p><p><strong>Request ID:</strong> @{triggerBody()?['RequestID']}<br><strong>Employee:</strong> @{triggerBody()?['Employee']?['Title']}<br><strong>Type:</strong> @{triggerBody()?['LifecycleType']}</p><p><strong>Approval History:</strong></p><ul>@{join(variables('varApprovalHistory'), '<li>', '</li>')}</ul>"
+      }
+    },
+    {
+      "stepNumber": 8,
+      "stepName": "Condition - If Approved Start Onboarding",
+      "action": "Condition",
+      "configuration": {
+        "expression": "@equals(variables('varApprovalStatus'), 'Approved')",
+        "ifTrue": [
+          {
+            "action": "Call child flow",
+            "flowName": "Onboarding Workflow",
+            "inputs": {
+              "requestId": "@{triggerBody()?['ID']}",
+              "lifecycleType": "@{triggerBody()?['LifecycleType']}"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "errorHandling": {
+    "scope": "Entire Flow",
+    "onFailure": [
+      {
+        "action": "Send an email (V2)",
+        "to": "<HR Admin Email>",
+        "subject": "Approval Workflow Error - @{triggerBody()?['RequestID']}",
+        "body": "Error in approval workflow. Request ID: @{triggerBody()?['RequestID']}"
+      }
+    ]
+  },
+  "settings": {
+    "concurrency": {
+      "enabled": false
+    },
+    "retryPolicy": {
+      "type": "exponential",
+      "count": 2,
+      "interval": "PT5M"
+    }
+  },
+  "connections": [
+    "SharePoint",
+    "Office 365 Outlook",
+    "Office 365 Users",
+    "Approvals"
+  ]
+}
